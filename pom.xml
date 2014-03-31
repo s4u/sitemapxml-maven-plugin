@@ -14,13 +14,15 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.github.s4u</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
+        <relativePath />
     </parent>
 
     <groupId>com.github.s4u.plugins</groupId>
@@ -64,7 +66,7 @@
     </distributionManagement>
 
     <properties>
-        <maven.version>3.1.1</maven.version>
+        <maven.version>3.0.4</maven.version>
     </properties>
 
     <prerequisites>
@@ -90,6 +92,17 @@
                 <artifactId>maven-plugin-annotations</artifactId>
                 <version>3.2</version>
             </dependency>
+            <!-- dependency coverage -->
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-artifact</artifactId>
+                <version>${maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>2.0.6</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -112,6 +125,16 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.github.s4u.plugins</groupId>
+                    <artifactId>sitemapxml-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -135,6 +158,17 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.github.s4u.plugins</groupId>
+                <artifactId>sitemapxml-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>gen</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -150,6 +184,7 @@
                 <reportSets>
                     <reportSet>
                         <reports>
+                            <report>cim</report>
                             <report>dependencies</report>
                             <report>dependency-convergence</report>
                             <report>issue-tracking</report>
