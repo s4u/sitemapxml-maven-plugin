@@ -12,4 +12,4 @@ http://www.sitemaps.org/
 
 More information you can find on site:
 
-http://s4u.github.io/sitemapxml-maven-plugin/
+http://www.simplify4u.org/sitemapxml-maven-plugin/

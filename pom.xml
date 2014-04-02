@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.github.s4u</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.3-SNAPSHOT</version>
         <relativePath />
     </parent>
 
@@ -32,7 +32,6 @@
 
     <name>Maven Sitemap generator plugin</name>
     <description>This plugin generate sitemap.xml for project site.</description>
-    <url>http://s4u.github.io/sitemapxml-maven-plugin</url>
 
     <licenses>
         <license>
