@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Slawomir Jaranowski
+ * Copyright 2019 Slawomir Jaranowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.s4u.plugins.sitemapxml;
-
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+package org.simplify4u.plugins.sitemapxml;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -41,6 +25,24 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Generate sitemap.xml for project site.
  *
@@ -48,7 +50,6 @@ import org.w3c.dom.Element;
  */
 @Mojo(name = "gen", defaultPhase = LifecyclePhase.SITE, requiresProject = true, threadSafe = true)
 public class SiteMapXmlMojo extends AbstractMojo {
-
 
     /**
      * Directory where the project sites and report distributions was generated.
@@ -89,12 +90,12 @@ public class SiteMapXmlMojo extends AbstractMojo {
             getLog().debug("Includes: " + Arrays.toString(includes));
         }
 
-        List<String> urls = new ArrayList<>();
-        listDirectory(1, siteOutputDirectory, urls);
 
         try {
+            List<String> urls = new ArrayList<>();
+            listDirectory(1, siteOutputDirectory, urls);
             generateXML(urls);
-        } catch (ParserConfigurationException | TransformerException e) {
+        } catch (ParserConfigurationException | TransformerException | IOException e) {
             getLog().error("", e);
             throw new MojoFailureException("Generate sitemap.xml error: " + e.getMessage(), e);
         }
@@ -107,11 +108,11 @@ public class SiteMapXmlMojo extends AbstractMojo {
     private void checkParameters() {
 
         if (includes == null || includes.length == 0) {
-            includes = new String[]{".*\\.html"};
+            includes = new String[] { ".*\\.html" };
         }
 
         if (siteUrl.endsWith("/")) {
-            siteUrl.replaceFirst("/+$", "");
+            siteUrl = siteUrl.replaceFirst("/+$", "");
         }
     }
 
@@ -139,8 +140,13 @@ public class SiteMapXmlMojo extends AbstractMojo {
         }
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
         Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
         DOMSource source = new DOMSource(document);
         StreamResult streamResult = new StreamResult(new File(siteOutputDirectory, "sitemap.xml"));
 
@@ -176,13 +182,16 @@ public class SiteMapXmlMojo extends AbstractMojo {
      *
      * @param depth               max directory depth
      * @param siteOutputDirectory current directory
-     * @param urls               output list
+     * @param urls                output list
      */
-    private void listDirectory(int depth, File siteOutputDirectory, List<String> urls) {
+    private void listDirectory(int depth, File siteOutputDirectory, List<String> urls) throws IOException {
 
         List<File> nextDirs = new ArrayList<>();
 
-        for (File file : siteOutputDirectory.listFiles(new OurFilenameFilter())) {
+        File[] listFiles = Optional.ofNullable(siteOutputDirectory.listFiles(new OurFilenameFilter())).orElseThrow(() -> new IOException("Invalid outputDirectory"));
+        Arrays.sort(listFiles);
+
+        for (File file : listFiles) {
 
             if (file.isDirectory()) {
                 nextDirs.add(file);
