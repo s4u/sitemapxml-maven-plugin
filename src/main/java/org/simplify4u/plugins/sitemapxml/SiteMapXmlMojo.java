@@ -42,12 +42,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Generate sitemap.xml for project site.
  *
  * @author Slawomir Jaranowski.
  */
+@SuppressWarnings("squid:S1258") // Classes and enums with private members should have a constructor
 @Mojo(name = "gen", defaultPhase = LifecyclePhase.SITE, requiresProject = true, threadSafe = true)
 public class SiteMapXmlMojo extends AbstractMojo {
 
@@ -102,6 +104,8 @@ public class SiteMapXmlMojo extends AbstractMojo {
         getLog().info("Generate sitemap.xml - OK");
     }
 
+    private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
+
     /**
      * Check parameters, set default value.
      */
@@ -112,7 +116,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
         }
 
         if (siteUrl.endsWith("/")) {
-            siteUrl = siteUrl.replaceFirst("/+$", "");
+            siteUrl = PATTERN_END_SLASH.matcher(siteUrl).replaceFirst("");
         }
     }
 
@@ -125,7 +129,10 @@ public class SiteMapXmlMojo extends AbstractMojo {
      */
     private void generateXML(List<String> urls) throws ParserConfigurationException, TransformerException {
 
-        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.newDocument();
         Element urlset = document.createElement("urlset");
         urlset.setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
@@ -218,7 +225,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
 
         String fileAbs = file.getAbsolutePath();
         String fileToAdd = fileAbs.replace(siteOutputDirectory.getAbsolutePath(), "");
-        fileToAdd = fileToAdd.replaceAll("\\\\", "/");
+        fileToAdd = fileToAdd.replace("\\", "/");
         urls.add(siteUrl + fileToAdd);
     }
 }
