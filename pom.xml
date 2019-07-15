@@ -50,6 +50,10 @@
         </developer>
     </developers>
 
+    <prerequisites>
+        <maven>${maven.version}</maven>
+    </prerequisites>
+
     <scm>
         <connection>scm:git:git@github.com:s4u/sitemapxml-maven-plugin.git</connection>
         <developerConnection>${project.scm.connection}</developerConnection>
@@ -68,9 +72,6 @@
         <maven.version>3.5.0</maven.version>
     </properties>
 
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
 
     <dependencyManagement>
         <dependencies>
@@ -226,11 +227,6 @@
                         </reports>
                     </reportSet>
                 </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>nl.demon.shadowland.maven.plugins</groupId>
-                <artifactId>sonarqube-maven-report</artifactId>
-                <version>0.2.2</version>
             </plugin>
         </plugins>
     </reporting>
