@@ -27,11 +27,15 @@ matrix:
         - ../utils/mvn-run.sh clean verify
 
 deploy:
-  provider: script
-  script: bash -c "echo ok"
+  provider: pages
   skip_cleanup: true
+  keep_history: true
+  github_token: $GITHUB_TOKEN
+  verbose: true
+  local_dir: target/site
   on:
     tags: true
+    repo: s4u/sitemapxml-maven-plugin
     jdk: openjdk8
 
 cache:
