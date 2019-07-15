@@ -227,6 +227,11 @@
                     </reportSet>
                 </reportSets>
             </plugin>
+            <plugin>
+                <groupId>nl.demon.shadowland.maven.plugins</groupId>
+                <artifactId>sonarqube-maven-report</artifactId>
+                <version>0.2.2</version>
+            </plugin>
         </plugins>
     </reporting>
 </project>
