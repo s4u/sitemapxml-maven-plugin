@@ -13,14 +13,18 @@ install:
   - curl -Ls https://github.com/s4u/travis/archive/master.tar.gz |
     tar -zx --strip-components 2 -C ../utils travis-master/src
 
+before_script:
+  - ../utils/print-env.sh
+
 matrix:
   include:
 
     - jdk: openjdk8
       script:
-        - ../utils/mvn-push.sh clean verify sonar:sonar
-        - ../utils/mvn-pr.sh   clean verify
-        - ../utils/mvn-tag.sh  site
+        - ../utils/mvn-push.sh    clean deploy
+        - ../utils/mvn-sec-env.sh sonar:sonar
+        - ../utils/mvn-pr.sh      clean verify
+        - ../utils/mvn-tag.sh     site
 
     - jdk: openjdk11
       script:
