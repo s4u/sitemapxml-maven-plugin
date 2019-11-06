@@ -16,19 +16,28 @@ install:
 before_script:
   - ../utils/print-env.sh
 
-matrix:
+jobs:
   include:
 
-    - jdk: openjdk8
+    - name: "buid on main repo - jdk8"
+      jdk: openjdk8
       script:
         - ../utils/mvn-push.sh    clean deploy
-        - ../utils/mvn-sec-env.sh sonar:sonar
         - ../utils/mvn-pr.sh      clean verify
-        - ../utils/mvn-tag.sh     site
+        - ../utils/mvn-tag.sh     clean verify site
+        - ../utils/mvn-sonar.sh   sonar:sonar
+      if: repo = "s4u/sitemapxml-maven-plugin"
 
+    - name: "build on forks - jdk8"
+      jdk: openjdk8
+      script:
+        - ../utils/mvn-run.sh     clean verify
+      if: repo != "s4u/sitemapxml-maven-plugin"
+
+    - name: "jdk11"
     - jdk: openjdk11
       script:
-        - ../utils/mvn-run.sh clean verify
+        - ../utils/mvn-run.sh     clean verify
 
 deploy:
   provider: pages
