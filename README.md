@@ -16,4 +16,4 @@ http://www.sitemaps.org/
 
 More information you can find on site:
 
-http://www.simplify4u.org/sitemapxml-maven-plugin/
+https://www.simplify4u.org/sitemapxml-maven-plugin/
