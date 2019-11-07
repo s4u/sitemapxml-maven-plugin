@@ -21,8 +21,8 @@
     <parent>
         <groupId>org.simplify4u</groupId>
         <artifactId>parent</artifactId>
-        <version>2.4.2-SNAPSHOT</version>
-         <relativePath/>
+        <version>2.4.2</version>
+        <relativePath/>
     </parent>
 
     <groupId>org.simplify4u.plugins</groupId>
