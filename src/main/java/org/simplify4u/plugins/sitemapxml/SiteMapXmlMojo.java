@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
  *
  * @author Slawomir Jaranowski.
  */
-@SuppressWarnings("squid:S1258") // Classes and enums with private members should have a constructor
 @Mojo(name = "gen", defaultPhase = LifecyclePhase.SITE, requiresProject = true, threadSafe = true)
 public class SiteMapXmlMojo extends AbstractMojo {
 
