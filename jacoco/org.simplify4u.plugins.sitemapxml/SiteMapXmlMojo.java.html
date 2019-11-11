@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SiteMapXmlMojo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Maven Sitemap generator plugin</a> &gt; <a href="index.source.html" class="el_package">org.simplify4u.plugins.sitemapxml</a> &gt; <span class="el_source">SiteMapXmlMojo.java</span></div><h1>SiteMapXmlMojo.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2019 Slawomir Jaranowski
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.simplify4u.plugins.sitemapxml;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+/**
+ * Generate sitemap.xml for project site.
+ *
+ * @author Slawomir Jaranowski.
+ */
+@Mojo(name = &quot;gen&quot;, defaultPhase = LifecyclePhase.SITE, requiresProject = true, threadSafe = true)
+<span class="fc" id="L53">public class SiteMapXmlMojo extends AbstractMojo {</span>
+
+    /**
+     * Directory where the project sites and report distributions was generated.
+     */
+    @Parameter(property = &quot;siteOutputDirectory&quot;, defaultValue = &quot;${project.reporting.outputDirectory}&quot;, required = true)
+    private File siteOutputDirectory;
+
+    /**
+     * URL prefix which will be used to build url in sitemap.xml
+     */
+    @Parameter(property = &quot;sitemapxml.siteurl&quot;, defaultValue = &quot;${project.url}&quot;, required = true)
+    private String siteUrl;
+
+    /**
+     * Files mask which be used to include its to sitemap.xml&lt;br/&gt;
+     *
+     * Default is &lt;code&gt;*.html&lt;/code&gt;
+     */
+    @Parameter
+    private String[] includes;
+
+    /**
+     * Maximum depth for looking for items for sitemap.xml
+     */
+    @Parameter(property = &quot;sitemapxml.maxdept&quot;, defaultValue = &quot;1&quot;)
+    private int maxDepth;
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+
+<span class="fc" id="L84">        checkParameters();</span>
+
+<span class="fc" id="L86">        getLog().info(&quot;Generate sitemap.xml - Start&quot;);</span>
+
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (getLog().isDebugEnabled()) {</span>
+<span class="nc" id="L89">            getLog().debug(&quot;Site local directory: &quot; + siteOutputDirectory);</span>
+<span class="nc" id="L90">            getLog().debug(&quot;Site url: &quot; + siteUrl);</span>
+<span class="nc" id="L91">            getLog().debug(&quot;Includes: &quot; + Arrays.toString(includes));</span>
+        }
+
+
+        try {
+<span class="fc" id="L96">            List&lt;String&gt; urls = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L97">            listDirectory(1, siteOutputDirectory, urls);</span>
+<span class="fc" id="L98">            generateXML(urls);</span>
+<span class="nc" id="L99">        } catch (ParserConfigurationException | TransformerException | IOException e) {</span>
+<span class="nc" id="L100">            getLog().error(&quot;&quot;, e);</span>
+<span class="nc" id="L101">            throw new MojoFailureException(&quot;Generate sitemap.xml error: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L102">        }</span>
+<span class="fc" id="L103">        getLog().info(&quot;Generate sitemap.xml - OK&quot;);</span>
+<span class="fc" id="L104">    }</span>
+
+<span class="fc" id="L106">    private static final Pattern PATTERN_END_SLASH = Pattern.compile(&quot;/+$&quot;);</span>
+
+    /**
+     * Check parameters, set default value.
+     */
+    private void checkParameters() {
+
+<span class="pc bpc" id="L113" title="3 of 4 branches missed.">        if (includes == null || includes.length == 0) {</span>
+<span class="fc" id="L114">            includes = new String[] { &quot;.*\\.html&quot; };</span>
+        }
+
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (siteUrl.endsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L118">            siteUrl = PATTERN_END_SLASH.matcher(siteUrl).replaceFirst(&quot;&quot;);</span>
+        }
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * Generate output sitemap.xml
+     *
+     * @param urls urls to include
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    private void generateXML(List&lt;String&gt; urls) throws ParserConfigurationException, TransformerException {
+
+<span class="fc" id="L131">        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L132">        documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);</span>
+
+<span class="fc" id="L134">        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();</span>
+<span class="fc" id="L135">        Document document = documentBuilder.newDocument();</span>
+<span class="fc" id="L136">        Element urlset = document.createElement(&quot;urlset&quot;);</span>
+<span class="fc" id="L137">        urlset.setAttribute(&quot;xmlns&quot;, &quot;http://www.sitemaps.org/schemas/sitemap/0.9&quot;);</span>
+<span class="fc" id="L138">        document.appendChild(urlset);</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        for (String file : urls) {</span>
+<span class="fc" id="L141">            Element url = document.createElement(&quot;url&quot;);</span>
+<span class="fc" id="L142">            Element loc = document.createElement(&quot;loc&quot;);</span>
+<span class="fc" id="L143">            loc.appendChild(document.createTextNode(file));</span>
+<span class="fc" id="L144">            url.appendChild(loc);</span>
+<span class="fc" id="L145">            urlset.appendChild(url);</span>
+<span class="fc" id="L146">        }</span>
+
+<span class="fc" id="L148">        TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="fc" id="L149">        transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);</span>
+
+<span class="fc" id="L151">        Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="fc" id="L152">        transformer.setOutputProperty(OutputKeys.ENCODING, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L153">        transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="fc" id="L154">        transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);</span>
+
+<span class="fc" id="L156">        DOMSource source = new DOMSource(document);</span>
+<span class="fc" id="L157">        StreamResult streamResult = new StreamResult(new File(siteOutputDirectory, &quot;sitemap.xml&quot;));</span>
+
+<span class="fc" id="L159">        transformer.transform(source, streamResult);</span>
+<span class="fc" id="L160">    }</span>
+
+    /**
+     * Implementation of FilenameFilter.
+     */
+<span class="fc" id="L165">    class OurFilenameFilter implements FilenameFilter {</span>
+
+        @Override
+        public boolean accept(File dir, String name) {
+
+<span class="fc" id="L170">            File f = new File(dir, name);</span>
+
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            if (f.isDirectory()) {</span>
+<span class="nc" id="L173">                return true;</span>
+            }
+
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            for (String s : includes) {</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">                if (name.matches(s)) {</span>
+<span class="fc" id="L178">                    return true;</span>
+                }
+            }
+
+<span class="nc" id="L182">            return false;</span>
+        }
+    }
+
+    /**
+     * Prepare file list for xml.
+     *
+     * @param depth               max directory depth
+     * @param siteOutputDirectory current directory
+     * @param urls                output list
+     */
+    private void listDirectory(int depth, File siteOutputDirectory, List&lt;String&gt; urls) throws IOException {
+
+<span class="fc" id="L195">        List&lt;File&gt; nextDirs = new ArrayList&lt;&gt;();</span>
+
+<span class="pc" id="L197">        File[] listFiles = Optional.ofNullable(siteOutputDirectory.listFiles(new OurFilenameFilter())).orElseThrow(() -&gt; new IOException(&quot;Invalid outputDirectory&quot;));</span>
+<span class="fc" id="L198">        Arrays.sort(listFiles);</span>
+
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        for (File file : listFiles) {</span>
+
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">            if (file.isDirectory()) {</span>
+<span class="nc" id="L203">                nextDirs.add(file);</span>
+            } else {
+<span class="fc" id="L205">                getLog().debug(&quot;add file to list: &quot; + file);</span>
+<span class="fc" id="L206">                appendFile(urls, file);</span>
+            }
+        }
+
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (depth &lt; maxDepth) {</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            for (File dir : nextDirs) {</span>
+<span class="nc" id="L212">                listDirectory(depth + 1, dir, urls);</span>
+<span class="nc" id="L213">            }</span>
+        }
+<span class="fc" id="L215">    }</span>
+
+    /**
+     * Append one file to list, transform its name to url.
+     *
+     * @param urls output list
+     * @param file file to add to list
+     */
+    private void appendFile(List&lt;String&gt; urls, File file) {
+
+<span class="fc" id="L225">        String fileAbs = file.getAbsolutePath();</span>
+<span class="fc" id="L226">        String fileToAdd = fileAbs.replace(siteOutputDirectory.getAbsolutePath(), &quot;&quot;);</span>
+<span class="fc" id="L227">        fileToAdd = fileToAdd.replace(&quot;\\&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L228">        urls.add(siteUrl + fileToAdd);</span>
+<span class="fc" id="L229">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
