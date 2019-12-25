@@ -69,6 +69,7 @@
 
     <properties>
         <maven.version>3.5.0</maven.version>
+        <pgp-keys-map.version>2019.12-SNAPSHOT</pgp-keys-map.version>
     </properties>
 
 
@@ -137,6 +138,12 @@
                 <artifactId>guava</artifactId>
                 <version>20.0</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.simplify4u</groupId>
+                <artifactId>pgp-keys-map</artifactId>
+                <version>${pgp-keys-map.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -172,7 +179,16 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.simplify4u</groupId>
+            <artifactId>pgp-keys-map</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -199,6 +215,30 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.simplify4u.plugins</groupId>
+                <artifactId>pgpverify-maven-plugin</artifactId>
+                <version>1.5.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <verifyPlugins>true</verifyPlugins>
+                    <keysMapLocation>/pgp-keys-map.list</keysMapLocation>
+                    <strictNoSignature>true</strictNoSignature>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.simplify4u</groupId>
+                        <artifactId>pgp-keys-map</artifactId>
+                        <version>${pgp-keys-map.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
