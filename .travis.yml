@@ -1,11 +1,6 @@
 version: ~> 1.0
 language: java
 
-branches:
-  only:
-    - master
-    - /^v\d+(\.\d+)*$/
-
 env:
   global:
     - M2_CACHE_CLEAN_DIR: "org/simplify4u/plugins/sitemapxml-maven-plugin*"
