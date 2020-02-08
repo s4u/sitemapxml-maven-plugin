@@ -194,7 +194,9 @@ public class SiteMapXmlMojo extends AbstractMojo {
 
         List<File> nextDirs = new ArrayList<>();
 
-        File[] listFiles = Optional.ofNullable(siteOutputDirectory.listFiles(new OurFilenameFilter())).orElseThrow(() -> new IOException("Invalid outputDirectory"));
+        File[] listFiles = Optional.ofNullable(siteOutputDirectory.listFiles(new OurFilenameFilter()))
+                .orElseThrow(() -> new IOException("Invalid outputDirectory"));
+
         Arrays.sort(listFiles);
 
         for (File file : listFiles) {
