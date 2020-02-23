@@ -21,9 +21,9 @@ import org.apache.maven.plugin.testing.MojoRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,8 +51,10 @@ public class SiteMapXmlMojoTest {
         Mojo gen = rule.lookupConfiguredMojo(project, "gen");
         gen.execute();
 
-        String generatedSiteMap = new String(Files.readAllBytes(Paths.get(project.getReporting().getOutputDirectory(), "sitemap.xml")),
+        String generatedSiteMap = new String(Files.readAllBytes(
+                new File( project.getReporting().getOutputDirectory(), "sitemap.xml").toPath()),
                 StandardCharsets.UTF_8);
+
 
         assertEquals("Generated map has not expected content",
                 EXPECTED_SITE_MAP, generatedSiteMap);
