@@ -25,20 +25,21 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
+import static java.lang.System.lineSeparator;
 import static org.junit.Assert.assertEquals;
 
 public class SiteMapXmlMojoTest {
 
 
-    private static final String EXPECTED_SITE_MAP = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" +
-            "    <url>\n" +
-            "        <loc>http://example.com/index.html</loc>\n" +
-            "    </url>\n" +
-            "    <url>\n" +
-            "        <loc>http://example.com/index2.html</loc>\n" +
-            "    </url>\n" +
-            "</urlset>\n";
+    private static final String EXPECTED_SITE_MAP = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" + lineSeparator() +
+            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + lineSeparator() +
+            "    <url>" + lineSeparator() +
+            "        <loc>http://example.com/index.html</loc>" + lineSeparator() +
+            "    </url>" + lineSeparator() +
+            "    <url>" + lineSeparator() +
+            "        <loc>http://example.com/index2.html</loc>" + lineSeparator() +
+            "    </url>" + lineSeparator() +
+            "</urlset>" + lineSeparator();
 
     @Rule
     public MojoRule rule = new MojoRule();
