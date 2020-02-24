@@ -1,4 +1,4 @@
-name: verify on linux, windows, macOS - jdk 8, 11, 13
+name: verify linux,win,mac - jdk 8,11,13
 
 on:
   push:
