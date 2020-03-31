@@ -1,4 +1,4 @@
-name: verify linux,win,mac - jdk 8,11,13
+name: verify
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        java: [8, 11, 13]
+        java: [8, 11, 14]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
