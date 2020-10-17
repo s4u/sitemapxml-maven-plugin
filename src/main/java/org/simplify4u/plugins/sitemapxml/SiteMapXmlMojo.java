@@ -78,6 +78,8 @@ public class SiteMapXmlMojo extends AbstractMojo {
     @Parameter(property = "sitemapxml.maxdept", defaultValue = "1")
     private int maxDepth;
 
+    private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -91,7 +93,6 @@ public class SiteMapXmlMojo extends AbstractMojo {
             getLog().debug("Includes: " + Arrays.toString(includes));
         }
 
-
         try {
             List<String> urls = new ArrayList<>();
             listDirectory(1, siteOutputDirectory, urls);
@@ -102,8 +103,6 @@ public class SiteMapXmlMojo extends AbstractMojo {
         }
         getLog().info("Generate sitemap.xml - OK");
     }
-
-    private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
 
     /**
      * Check parameters, set default value.
@@ -130,6 +129,8 @@ public class SiteMapXmlMojo extends AbstractMojo {
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.newDocument();
@@ -147,6 +148,8 @@ public class SiteMapXmlMojo extends AbstractMojo {
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
