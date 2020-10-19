@@ -42,7 +42,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
 
-      - uses: s4u/maven-settings-action@v2.1.1
+      - uses: s4u/maven-settings-action@v2.2.0
         with:
           sonatypeSnapshots: true
 
