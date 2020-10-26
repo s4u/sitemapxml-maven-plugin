@@ -1,4 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-Maven Sitemap generator plugin,org.simplify4u.plugins.sitemapxml,SiteMapXmlMojo,89,243,9,9,10,54,8,9,1,7
-Maven Sitemap generator plugin,org.simplify4u.plugins.sitemapxml,SiteMapXmlMojo.OurFilenameFilter,6,37,3,3,2,6,3,2,0,2
-Maven Sitemap generator plugin,org.simplify4u.plugins.sitemapxml,HelpMojo,893,0,110,0,159,0,71,0,16,0
