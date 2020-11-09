@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>http://example.com/index.html</loc>
+    </url>
+    <url>
+        <loc>http://example.com/index2.html</loc>
+    </url>
+</urlset>

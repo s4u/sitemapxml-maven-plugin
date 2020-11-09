@@ -17,47 +17,82 @@
 package org.simplify4u.plugins.sitemapxml;
 
 import org.apache.maven.plugin.Mojo;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.testing.MojoRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import static java.lang.System.lineSeparator;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class SiteMapXmlMojoTest {
 
-
-    private static final String EXPECTED_SITE_MAP = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" + lineSeparator() +
-            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + lineSeparator() +
-            "    <url>" + lineSeparator() +
-            "        <loc>http://example.com/index.html</loc>" + lineSeparator() +
-            "    </url>" + lineSeparator() +
-            "    <url>" + lineSeparator() +
-            "        <loc>http://example.com/index2.html</loc>" + lineSeparator() +
-            "    </url>" + lineSeparator() +
-            "</urlset>" + lineSeparator();
+    private static final URL RESOURCE_ROOT = SiteMapXmlMojo.class.getResource("/");
 
     @Rule
     public MojoRule rule = new MojoRule();
 
+    @Before
+    public void setup() throws IOException, URISyntaxException {
+        Files.deleteIfExists(Paths.get(RESOURCE_ROOT.toURI()).resolve("test-site").resolve("sitemap.xml"));
+    }
+
     @Test
     public void pluginShouldGenerateCorrectSitemap() throws Exception {
 
-        ProjectMock project = new ProjectMock();
+        ProjectMock project = new ProjectMock("/test-site");
 
         Mojo gen = rule.lookupConfiguredMojo(project, "gen");
         gen.execute();
 
-        String generatedSiteMap = new String(Files.readAllBytes(
-                new File( project.getReporting().getOutputDirectory(), "sitemap.xml").toPath()),
-                StandardCharsets.UTF_8);
+        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-1.xml"), StandardCharsets.UTF_8);
+    }
 
+    @Test
+    public void pluginShouldGenerateCorrectSitemapWithDepth2() throws Exception {
 
-        assertEquals("Generated map has not expected content",
-                EXPECTED_SITE_MAP, generatedSiteMap);
+        ProjectMock project = new ProjectMock("/test-site");
+
+        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
+        rule.setVariableValueToObject(gen, "maxDepth", 2);
+        gen.execute();
+
+        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-2.xml"), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void pluginShouldReturnInfoAboutMissSite() throws Exception {
+
+        ProjectMock project = new ProjectMock("/no-exist-test-site");
+
+        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
+
+        assertThatThrownBy(gen::execute)
+                .isExactlyInstanceOf(MojoFailureException.class)
+                .hasMessageMatching("site directory (/|[A-Z]:\\\\)no-exist-test-site not exist - please run with site phase");
+    }
+
+    @Test
+    public void pluginShouldSkipSiteMapGeneration() throws Exception {
+
+        ProjectMock project = new ProjectMock("/test-site");
+
+        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
+        rule.setVariableValueToObject(gen, "skip", true);
+
+        gen.execute();
+
+        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml")).doesNotExist();
     }
 }

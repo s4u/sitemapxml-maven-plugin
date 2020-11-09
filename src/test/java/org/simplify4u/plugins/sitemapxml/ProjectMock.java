@@ -19,27 +19,38 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Reporting;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 
-public class ProjectMock extends MavenProjectStub {
+import java.net.URL;
+import java.util.Optional;
+
+public class ProjectMock extends MavenProjectStub
+{
 
     private Reporting reporting;
 
-    public ProjectMock() {
+    public ProjectMock( String outDirectory )
+    {
+        super();
         reporting = new Reporting();
-        reporting.setOutputDirectory(getClass().getResource("/test-site").getFile());
+        reporting.setOutputDirectory( Optional.ofNullable( getClass().getResource( outDirectory ) )
+                .map( URL::getFile )
+                .orElse( outDirectory ) );
     }
 
     @Override
-    public Plugin getPlugin(String pluginKey) {
+    public Plugin getPlugin( String pluginKey )
+    {
         return null;
     }
 
     @Override
-    public Reporting getReporting() {
+    public Reporting getReporting()
+    {
         return reporting;
     }
 
     @Override
-    public String getUrl() {
+    public String getUrl()
+    {
         return "http://example.com/";
     }
 }
