@@ -71,7 +71,6 @@
         <maven.version>3.5.0</maven.version>
         <pgp-keys-map.version>2020.08</pgp-keys-map.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <sitemapxml-maven-plugin.version>${project.version}</sitemapxml-maven-plugin.version>
     </properties>
 
 
