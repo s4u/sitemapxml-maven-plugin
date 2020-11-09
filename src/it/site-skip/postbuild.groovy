@@ -15,15 +15,12 @@
  */
 def buildLog = new File( basedir, 'build.log' ).text
 
-assert buildLog.contains('[INFO] Generate sitemap.xml - Start')
-assert buildLog.contains('[INFO] Generate sitemap.xml - OK')
+assert buildLog.contains('[INFO] maven.site.skip = true: Skipping site generation')
+assert buildLog.contains('[INFO] Skipping sitemap.xml generation')
 assert buildLog.contains('[INFO] BUILD SUCCESS')
 
 def index = new File( basedir, 'target/site/index.html' )
-assert index.exists()
+assert !index.exists()
 
 def sitemap = new File( basedir, 'target/site/sitemap.xml' )
-
-assert sitemap.text.contains('<?xml version="1.0" encoding="UTF-8" standalone="no"?>')
-assert sitemap.text.contains('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
-assert sitemap.text.contains('<loc>https://example.com/index.html</loc>')
+assert !sitemap.exists()

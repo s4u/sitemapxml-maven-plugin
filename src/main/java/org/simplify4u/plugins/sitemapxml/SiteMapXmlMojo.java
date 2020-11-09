@@ -17,11 +17,12 @@
 package org.simplify4u.plugins.sitemapxml;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -37,7 +38,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,31 +49,51 @@ import java.util.regex.Pattern;
  *
  * @author Slawomir Jaranowski.
  */
-@Mojo(name = "gen", defaultPhase = LifecyclePhase.SITE, requiresProject = true, threadSafe = true)
+@Mojo(name = "gen", defaultPhase = LifecyclePhase.SITE, threadSafe = true)
 public class SiteMapXmlMojo extends AbstractMojo {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SiteMapXmlMojo.class);
 
     /**
      * Directory where the project sites and report distributions was generated.
+     *
+     * @since 1.0.0
      */
-    @Parameter(property = "siteOutputDirectory", defaultValue = "${project.reporting.outputDirectory}", required = true)
+    @Parameter(property = "siteOutputDirectory", defaultValue = "${project.reporting.outputDirectory}",
+            required = true)
     private File siteOutputDirectory;
 
     /**
      * URL prefix which will be used to build url in sitemap.xml
+     *
+     * @since 1.0.0
      */
     @Parameter(property = "sitemapxml.siteurl", defaultValue = "${project.url}", required = true)
     private String siteUrl;
 
     /**
      * Files mask which be used to include its to sitemap.xml<br/>
-     *
+     * <p>
      * Default is <code>*.html</code>
+     * <p>
+     *
+     * @since 1.0.0
      */
     @Parameter
     private String[] includes;
 
     /**
+     * Skip sitemap.xml generation.
+     *
+     * @since 2.1.0
+     */
+    @Parameter(property = "maven.site.skip", defaultValue = "false")
+    private boolean skip;
+
+    /**
      * Maximum depth for looking for items for sitemap.xml
+     *
+     *  @since 1.0.0
      */
     @Parameter(property = "sitemapxml.maxdept", defaultValue = "1")
     private int maxDepth;
@@ -81,27 +101,35 @@ public class SiteMapXmlMojo extends AbstractMojo {
     private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoFailureException {
+
+        if (skip) {
+            LOGGER.info("Skipping sitemap.xml generation");
+            return;
+        }
 
         checkParameters();
 
-        getLog().info("Generate sitemap.xml - Start");
+        LOGGER.info("Generate sitemap.xml - Start");
 
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Site local directory: " + siteOutputDirectory);
-            getLog().debug("Site url: " + siteUrl);
-            getLog().debug("Includes: " + Arrays.toString(includes));
+        LOGGER.debug("Site local directory: {}", siteOutputDirectory);
+        LOGGER.debug("Site url: {}", siteUrl);
+        LOGGER.debug("Includes: {}", (Object) includes);
+
+        if (!siteOutputDirectory.exists()) {
+            throw new MojoFailureException(
+                    String.format("site directory %s not exist - please run with site phase", siteOutputDirectory));
         }
 
         try {
             List<String> urls = new ArrayList<>();
             listDirectory(1, siteOutputDirectory, urls);
             generateXML(urls);
-        } catch (ParserConfigurationException | TransformerException | IOException e) {
-            getLog().error("", e);
+        } catch (ParserConfigurationException | TransformerException e) {
             throw new MojoFailureException("Generate sitemap.xml error: " + e.getMessage(), e);
         }
-        getLog().info("Generate sitemap.xml - OK");
+
+        LOGGER.info("Generate sitemap.xml - OK");
     }
 
     /**
@@ -110,7 +138,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
     private void checkParameters() {
 
         if (includes == null || includes.length == 0) {
-            includes = new String[] { ".*\\.html" };
+            includes = new String[]{".*\\.html"};
         }
 
         if (siteUrl.endsWith("/")) {
@@ -122,8 +150,6 @@ public class SiteMapXmlMojo extends AbstractMojo {
      * Generate output sitemap.xml
      *
      * @param urls urls to include
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      */
     private void generateXML(List<String> urls) throws ParserConfigurationException, TransformerException {
 
@@ -191,14 +217,14 @@ public class SiteMapXmlMojo extends AbstractMojo {
      *
      * @param depth               max directory depth
      * @param siteOutputDirectory current directory
-     * @param urls                output list
      */
-    private void listDirectory(int depth, File siteOutputDirectory, List<String> urls) throws IOException {
+    private void listDirectory(int depth, File siteOutputDirectory, List<String> urls) {
 
         List<File> nextDirs = new ArrayList<>();
 
-        File[] listFiles = Optional.ofNullable(siteOutputDirectory.listFiles(new OurFilenameFilter()))
-                .orElseThrow(() -> new IOException("Invalid outputDirectory"));
+        File[] listFiles = Optional.ofNullable(siteOutputDirectory)
+                .map(dir -> dir.listFiles(new OurFilenameFilter()))
+                .orElseGet(() -> new File[]{});
 
         Arrays.sort(listFiles);
 
@@ -207,7 +233,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
             if (file.isDirectory()) {
                 nextDirs.add(file);
             } else {
-                getLog().debug("add file to list: " + file);
+                LOGGER.debug("add file to list: {}", file);
                 appendFile(urls, file);
             }
         }
