@@ -39,7 +39,7 @@ jobs:
           key: ${{ matrix.os }}-jdk${{ matrix.java }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ matrix.os }}-jdk${{ matrix.java }}-
 
-      - uses: actions/setup-java@v1.4.3
+      - uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
 
@@ -76,7 +76,7 @@ jobs:
           key: maven-site-test-${{ hashFiles('**/pom.xml') }}
           restore-keys: maven-site-test-
 
-      - uses: actions/setup-java@v1.4.3
+      - uses: actions/setup-java@v2
         with:
           java-version: 8
 
@@ -108,7 +108,7 @@ jobs:
           key: deploy-ubuntu-latest-jdk8-${{ hashFiles('**/pom.xml') }}
           restore-keys: deploy-ubuntu-latest-jdk8-
 
-      - uses: actions/setup-java@v1.4.3
+      - uses: actions/setup-java@v2
         with:
           java-version: 8
 
@@ -140,7 +140,7 @@ jobs:
           key: maven-site-deploy-${{ hashFiles('**/pom.xml') }}
           restore-keys: maven-site-deploy-
 
-      - uses: actions/setup-java@v1.4.3
+      - uses: actions/setup-java@v2
         with:
           java-version: 8
 
