@@ -276,7 +276,6 @@
                             <settingsFile>src/it/settings.xml</settingsFile>
                             <showErrors>true</showErrors>
                             <mavenOpts>${argLine}</mavenOpts>
-                            <writeJunitReport>true</writeJunitReport>
                         </configuration>
                     </execution>
                 </executions>
@@ -299,4 +298,18 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <profiles>
+        <profile>
+            <id>ci-system</id>
+            <activation>
+                <property>
+                    <name>env.CI</name>
+                </property>
+            </activation>
+            <properties>
+                <invoker.streamLogsOnFailures>true</invoker.streamLogsOnFailures>
+            </properties>
+        </profile>
+    </profiles>
 </project>
