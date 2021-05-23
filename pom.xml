@@ -31,11 +31,18 @@
 
     <name>Maven Sitemap generator plugin</name>
     <description>This plugin generate sitemap.xml for project site.</description>
+    <url>https://www.simplify4u.org/sitemapxml-maven-plugin</url>
+    <inceptionYear>2013</inceptionYear>
+
+    <organization>
+        <name>Simplify4U</name>
+        <url>https://www.simplify4u.org</url>
+    </organization>
 
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -45,6 +52,7 @@
             <id>sjaranowski</id>
             <name>Slawomir Jaranowski</name>
             <email>s.jaranowski@gmail.com</email>
+            <url>https://github.com/slawekjaranowski</url>
             <timezone>Europe/Warsaw</timezone>
         </developer>
     </developers>
@@ -285,20 +293,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>ci-management</report>
-                            <report>dependencies</report>
-                            <report>issue-management</report>
-                            <report>licenses</report>
-                            <report>plugins</report>
-                            <report>team</report>
-                            <report>scm</report>
-                            <report>summary</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
+                <configuration>
+                    <linkOnly>true</linkOnly>
+                </configuration>
             </plugin>
         </plugins>
     </reporting>
