@@ -78,7 +78,7 @@
     <properties>
         <maven.version>3.5.0</maven.version>
         <pgp-keys-map.version>2021.12.28</pgp-keys-map.version>
-        <slf4j.version>1.7.32</slf4j.version>
+        <slf4j.version>1.7.33</slf4j.version>
     </properties>
 
 
