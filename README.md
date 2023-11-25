@@ -11,7 +11,7 @@ This plugin generate sitemap.xml for project site.
 Sitemaps are an easy way for webmasters to inform search engines about pages on their sites
 that are available for crawling.
 
-http://www.sitemaps.org/
+https://www.sitemaps.org/
 
 
 # Project homepage

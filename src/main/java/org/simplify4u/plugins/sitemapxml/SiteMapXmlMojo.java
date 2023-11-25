@@ -43,9 +43,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * Generate sitemap.xml for project site.
+ * Generate <a href="https://www.sitemaps.org/">sitemap.xml</a> for project site.
  *
  * @author Slawomir Jaranowski.
  */
@@ -53,6 +54,12 @@ import java.util.regex.Pattern;
 public class SiteMapXmlMojo extends AbstractMojo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteMapXmlMojo.class);
+
+    private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
+
+    private String siteUrl;
+
+    private List<Pattern> patternIncludes;
 
     /**
      * Directory where the project sites and report distributions was generated.
@@ -62,25 +69,6 @@ public class SiteMapXmlMojo extends AbstractMojo {
     @Parameter(property = "siteOutputDirectory", defaultValue = "${project.reporting.outputDirectory}",
             required = true)
     private File siteOutputDirectory;
-
-    /**
-     * URL prefix which will be used to build url in sitemap.xml
-     *
-     * @since 1.0.0
-     */
-    @Parameter(property = "sitemapxml.siteurl", defaultValue = "${project.url}", required = true)
-    private String siteUrl;
-
-    /**
-     * Files mask which be used to include its to sitemap.xml<br/>
-     * <p>
-     * Default is <code>*.html</code>
-     * <p>
-     *
-     * @since 1.0.0
-     */
-    @Parameter
-    private String[] includes;
 
     /**
      * Skip sitemap.xml generation.
@@ -98,7 +86,69 @@ public class SiteMapXmlMojo extends AbstractMojo {
     @Parameter(property = "sitemapxml.maxdept", defaultValue = "1")
     private int maxDepth;
 
-    private static final Pattern PATTERN_END_SLASH = Pattern.compile("/+$");
+    /**
+     * List of index page names. Those names will be removed from the end of generated urls.
+     * <p>
+     * So for default configuration we will have: {@code https://www.example.com/} instead of
+     * {@code https://www.example.com/index.html}
+     *
+     * @since 2.2.0
+     */
+    @Parameter(defaultValue = "index.html", required = true)
+    private List<String> indexPages;
+
+    /**
+     * URL prefix which will be used to build url in sitemap.xml
+     *
+     * @param siteUrl a site url prefix
+     *
+     * @since 1.0.0
+     */
+    @Parameter(property = "sitemapxml.siteurl", defaultValue = "${project.url}", required = true)
+    public void setSiteUrl(String siteUrl) {
+        if (siteUrl.endsWith("/")) {
+            siteUrl = PATTERN_END_SLASH.matcher(siteUrl).replaceFirst("");
+        }
+
+        this.siteUrl = siteUrl;
+    }
+
+    /**
+     * Files mask which be used to include its to sitemap.xml
+     *
+     * @param includes a file mask for include
+     *
+     * @since 1.0.0
+     */
+    @Parameter(defaultValue = "*.html", required = true)
+    public void setIncludes(List<String> includes) {
+        this.patternIncludes = includes.stream()
+                .map(s -> s.replace(".", "\\."))
+                .map(s -> s.replace("*", ".*"))
+                .map(Pattern::compile)
+                .collect(Collectors.toList());
+    }
+
+    // setters used in test
+
+    /**
+     * Set maxDepth param.
+     *
+     * @param maxDepth a max depth
+     */
+    public void setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+
+    /**
+     * Set indexPages param.
+     *
+     * @param indexPages a list
+     */
+    public void setIndexPages(List<String> indexPages) {
+        this.indexPages = indexPages;
+    }
+
 
     @Override
     public void execute() throws MojoFailureException {
@@ -108,13 +158,11 @@ public class SiteMapXmlMojo extends AbstractMojo {
             return;
         }
 
-        checkParameters();
-
         LOGGER.info("Generate sitemap.xml - Start");
 
         LOGGER.debug("Site local directory: {}", siteOutputDirectory);
         LOGGER.debug("Site url: {}", siteUrl);
-        LOGGER.debug("Includes: {}", (Object) includes);
+        LOGGER.debug("Includes: {}", patternIncludes);
 
         if (!siteOutputDirectory.exists()) {
             throw new MojoFailureException(
@@ -132,19 +180,6 @@ public class SiteMapXmlMojo extends AbstractMojo {
         LOGGER.info("Generate sitemap.xml - OK");
     }
 
-    /**
-     * Check parameters, set default value.
-     */
-    private void checkParameters() {
-
-        if (includes == null || includes.length == 0) {
-            includes = new String[]{".*\\.html"};
-        }
-
-        if (siteUrl.endsWith("/")) {
-            siteUrl = PATTERN_END_SLASH.matcher(siteUrl).replaceFirst("");
-        }
-    }
 
     /**
      * Generate output sitemap.xml
@@ -202,13 +237,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
                 return true;
             }
 
-            for (String s : includes) {
-                if (name.matches(s)) {
-                    return true;
-                }
-            }
-
-            return false;
+            return patternIncludes.stream().anyMatch(p -> p.matcher(name).find());
         }
     }
 
@@ -253,8 +282,15 @@ public class SiteMapXmlMojo extends AbstractMojo {
      */
     private void appendFile(List<String> urls, File file) {
 
-        String fileAbs = file.getAbsolutePath();
-        String fileToAdd = fileAbs.replace(siteOutputDirectory.getAbsolutePath(), "");
+        File absoluteFile = file.getAbsoluteFile();
+        String absolutePath;
+        if (indexPages.contains(absoluteFile.getName())) {
+            absolutePath = absoluteFile.getParent() + "/";
+        } else {
+            absolutePath = absoluteFile.getPath();
+        }
+
+        String fileToAdd = absolutePath.replace(siteOutputDirectory.getAbsolutePath(), "");
         fileToAdd = fileToAdd.replace("\\", "/");
         urls.add(siteUrl + fileToAdd);
     }

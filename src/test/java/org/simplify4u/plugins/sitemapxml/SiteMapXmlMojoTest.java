@@ -16,13 +16,6 @@
 
 package org.simplify4u.plugins.sitemapxml;
 
-import org.apache.maven.plugin.Mojo;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.testing.MojoRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,9 +23,17 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.apache.maven.plugin.Mojo;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.testing.MojoRule;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SiteMapXmlMojoTest {
 
@@ -51,8 +52,8 @@ public class SiteMapXmlMojoTest {
 
         ProjectMock project = new ProjectMock("/test-site");
 
-        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
-        gen.execute();
+        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
+        mojo.execute();
 
         assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-1.xml"), StandardCharsets.UTF_8);
@@ -63,12 +64,40 @@ public class SiteMapXmlMojoTest {
 
         ProjectMock project = new ProjectMock("/test-site");
 
-        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
-        rule.setVariableValueToObject(gen, "maxDepth", 2);
-        gen.execute();
+        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
+        mojo.setMaxDepth(2);
+        mojo.execute();
 
         assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-2.xml"), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void pluginShouldGenerateCorrectSitemapWithNotExistingIndexPages() throws Exception {
+
+        ProjectMock project = new ProjectMock("/test-site");
+
+        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
+        mojo.setMaxDepth(2);
+        mojo.setIndexPages(Collections.singletonList("foo.html"));
+        mojo.execute();
+
+        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-foo.xml"), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void pluginShouldGenerateCorrectSitemapWithExistingIndexPages() throws Exception {
+
+        ProjectMock project = new ProjectMock("/test-site");
+
+        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
+        mojo.setMaxDepth(2);
+        mojo.setIndexPages(Collections.singletonList("index2.html"));
+        mojo.execute();
+
+        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-index2.xml"), StandardCharsets.UTF_8);
     }
 
     @Test
