@@ -93,7 +93,7 @@ public class SiteMapXmlMojo extends AbstractMojo {
     /**
      * Maximum depth for looking for items for sitemap.xml
      *
-     *  @since 1.0.0
+     * @since 1.0.0
      */
     @Parameter(property = "sitemapxml.maxdept", defaultValue = "1")
     private int maxDepth;
