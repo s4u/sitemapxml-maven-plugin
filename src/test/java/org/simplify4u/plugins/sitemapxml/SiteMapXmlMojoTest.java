@@ -23,105 +23,93 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.maven.plugin.Mojo;
+import org.apache.maven.api.plugin.testing.InjectMojo;
+import org.apache.maven.api.plugin.testing.MojoParameter;
+import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.testing.MojoRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SiteMapXmlMojoTest {
+@MojoTest
+@MojoParameter(name = "siteOutputDirectory", value = "${project.build.testOutputDirectory}/test-site")
+@MojoParameter(name = "siteUrl", value = "http://example.com/")
+class SiteMapXmlMojoTest {
 
     private static final URL RESOURCE_ROOT = SiteMapXmlMojo.class.getResource("/");
 
-    @Rule
-    public MojoRule rule = new MojoRule();
+    private static final File SITEMAP_FILE = new File(RESOURCE_ROOT.getFile(), "test-site/sitemap.xml");
 
-    @Before
-    public void setup() throws IOException, URISyntaxException {
+    @BeforeEach
+    void setup() throws IOException, URISyntaxException {
         Files.deleteIfExists(Paths.get(RESOURCE_ROOT.toURI()).resolve("test-site").resolve("sitemap.xml"));
     }
 
     @Test
-    public void pluginShouldGenerateCorrectSitemap() throws Exception {
+    @InjectMojo(goal = "gen")
+    void pluginShouldGenerateCorrectSitemap(SiteMapXmlMojo mojo) throws Exception {
 
-        ProjectMock project = new ProjectMock("/test-site");
-
-        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
         mojo.execute();
 
-        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+        assertThat(SITEMAP_FILE)
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-1.xml"), StandardCharsets.UTF_8);
     }
 
     @Test
-    public void pluginShouldGenerateCorrectSitemapWithDepth2() throws Exception {
+    @InjectMojo(goal = "gen")
+    @MojoParameter(name = "maxDepth", value = "2")
+    void pluginShouldGenerateCorrectSitemapWithDepth2(SiteMapXmlMojo mojo) throws Exception {
 
-        ProjectMock project = new ProjectMock("/test-site");
-
-        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
-        mojo.setMaxDepth(2);
         mojo.execute();
 
-        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+        assertThat(SITEMAP_FILE)
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-2.xml"), StandardCharsets.UTF_8);
     }
 
     @Test
-    public void pluginShouldGenerateCorrectSitemapWithNotExistingIndexPages() throws Exception {
+    @InjectMojo(goal = "gen")
+    @MojoParameter(name = "maxDepth", value = "2")
+    @MojoParameter(name = "indexPages", value = "foo.html")
+    void pluginShouldGenerateCorrectSitemapWithNotExistingIndexPages(SiteMapXmlMojo mojo) throws Exception {
 
-        ProjectMock project = new ProjectMock("/test-site");
-
-        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
-        mojo.setMaxDepth(2);
-        mojo.setIndexPages(Collections.singletonList("foo.html"));
         mojo.execute();
 
-        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+        assertThat(SITEMAP_FILE)
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-foo.xml"), StandardCharsets.UTF_8);
     }
 
     @Test
-    public void pluginShouldGenerateCorrectSitemapWithExistingIndexPages() throws Exception {
+    @InjectMojo(goal = "gen")
+    @MojoParameter(name = "maxDepth", value = "2")
+    @MojoParameter(name = "indexPages", value = "index2.html")
+    void pluginShouldGenerateCorrectSitemapWithExistingIndexPages(SiteMapXmlMojo mojo) throws Exception {
 
-        ProjectMock project = new ProjectMock("/test-site");
-
-        SiteMapXmlMojo mojo = rule.lookupConfiguredMojo(project, "gen");
-        mojo.setMaxDepth(2);
-        mojo.setIndexPages(Collections.singletonList("index2.html"));
         mojo.execute();
 
-        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml"))
+        assertThat(SITEMAP_FILE)
                 .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-index2.xml"), StandardCharsets.UTF_8);
     }
 
     @Test
-    public void pluginShouldReturnInfoAboutMissSite() throws Exception {
+    @InjectMojo(goal = "gen")
+    @MojoParameter(name = "siteOutputDirectory", value = "/no-exist-test-site")
+    void pluginShouldReturnInfoAboutMissSite(SiteMapXmlMojo mojo) {
 
-        ProjectMock project = new ProjectMock("/no-exist-test-site");
-
-        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
-
-        assertThatThrownBy(gen::execute)
+        assertThatThrownBy(mojo::execute)
                 .isExactlyInstanceOf(MojoFailureException.class)
                 .hasMessageMatching("site directory (/|[A-Z]:\\\\)no-exist-test-site not exist - please run with site phase");
     }
 
     @Test
-    public void pluginShouldSkipSiteMapGeneration() throws Exception {
+    @InjectMojo(goal = "gen")
+    @MojoParameter(name = "skip", value = "true")
+    void pluginShouldSkipSiteMapGeneration(SiteMapXmlMojo mojo) throws Exception {
 
-        ProjectMock project = new ProjectMock("/test-site");
+        mojo.execute();
 
-        Mojo gen = rule.lookupConfiguredMojo(project, "gen");
-        rule.setVariableValueToObject(gen, "skip", true);
-
-        gen.execute();
-
-        assertThat(new File(project.getReporting().getOutputDirectory(), "sitemap.xml")).doesNotExist();
+        assertThat(SITEMAP_FILE).doesNotExist();
     }
 }
