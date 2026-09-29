@@ -23,6 +23,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +35,9 @@ import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.plugin.MojoFailureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @MojoTest
 @MojoParameter(name = "siteOutputDirectory", value = "${project.build.testOutputDirectory}/test-site")
@@ -48,49 +53,26 @@ class SiteMapXmlMojoTest {
         Files.deleteIfExists(Paths.get(RESOURCE_ROOT.toURI()).resolve("test-site").resolve("sitemap.xml"));
     }
 
-    @Test
-    @InjectMojo(goal = "gen")
-    void pluginShouldGenerateCorrectSitemap(SiteMapXmlMojo mojo) throws Exception {
-
-        mojo.execute();
-
-        assertThat(SITEMAP_FILE)
-                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-1.xml"), StandardCharsets.UTF_8);
+    static Stream<Arguments> sitemapCases() {
+        return Stream.of(
+                Arguments.of(1, "index.html", "sitemap-depth-1.xml"),
+                Arguments.of(2, "index.html", "sitemap-depth-2.xml"),
+                Arguments.of(2, "foo.html", "sitemap-index-file-foo.xml"),
+                Arguments.of(2, "index2.html", "sitemap-index-file-index2.xml"));
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("sitemapCases")
     @InjectMojo(goal = "gen")
-    @MojoParameter(name = "maxDepth", value = "2")
-    void pluginShouldGenerateCorrectSitemapWithDepth2(SiteMapXmlMojo mojo) throws Exception {
+    void pluginShouldGenerateCorrectSitemap(int maxDepth, String indexPage, String expectedSitemap, SiteMapXmlMojo mojo)
+            throws Exception {
 
+        mojo.setMaxDepth(maxDepth);
+        mojo.setIndexPages(Collections.singletonList(indexPage));
         mojo.execute();
 
         assertThat(SITEMAP_FILE)
-                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-depth-2.xml"), StandardCharsets.UTF_8);
-    }
-
-    @Test
-    @InjectMojo(goal = "gen")
-    @MojoParameter(name = "maxDepth", value = "2")
-    @MojoParameter(name = "indexPages", value = "foo.html")
-    void pluginShouldGenerateCorrectSitemapWithNotExistingIndexPages(SiteMapXmlMojo mojo) throws Exception {
-
-        mojo.execute();
-
-        assertThat(SITEMAP_FILE)
-                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-foo.xml"), StandardCharsets.UTF_8);
-    }
-
-    @Test
-    @InjectMojo(goal = "gen")
-    @MojoParameter(name = "maxDepth", value = "2")
-    @MojoParameter(name = "indexPages", value = "index2.html")
-    void pluginShouldGenerateCorrectSitemapWithExistingIndexPages(SiteMapXmlMojo mojo) throws Exception {
-
-        mojo.execute();
-
-        assertThat(SITEMAP_FILE)
-                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), "sitemap-index-file-index2.xml"), StandardCharsets.UTF_8);
+                .hasSameTextualContentAs(new File(RESOURCE_ROOT.getFile(), expectedSitemap), StandardCharsets.UTF_8);
     }
 
     @Test
